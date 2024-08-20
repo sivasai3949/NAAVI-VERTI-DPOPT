@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Naavi</title>
+    <link
+      rel="stylesheet"
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"
+    />
+    <link rel="stylesheet" href="/static/styles.css" />
+    <link rel="icon" href="/static/favicon.jpg" type="image/x-icon" />
+  </head>
+  <body>
+    <header>
+      <div class="header-container">
+        <div class="logo-container">
+          <img src="/static/nav_logo.svg" alt="logo Icon" class="logo-icon" />
+        </div>
+        <div class="tagline-container">
+          <p>
+            The Pathway Generator
+            <span class="blinking-lightning">&#9889;</span>
+          </p>
+        </div>
+        <div class="theme-toggle-container">
+          <span class="theme-toggle-text" id="theme-toggle-text-light"
+            >Light</span
+          >
+          <input type="checkbox" id="theme-toggle" class="theme-toggle" />
+          <label for="theme-toggle" class="theme-toggle-label">
+            <span class="theme-toggle-slider"></span>
+          </label>
+          <span class="theme-toggle-text" id="theme-toggle-text-dark"
+            >Dark</span
+          >
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <div class="content-container">
+        <h2>
+          For crafting a Personalized Education Pathway, please summarize your
+          background, educational milestones, aspirations, higher education
+          goals, and financial considerations.
+        </h2>
+        <div class="intro-message-container">
+          <div class="intro-bubble">{{ intro_message }}</div>
+        </div>
+        <div id="chat-container" class="chat-container">
+          <!-- Chat bubbles will be appended here -->
+        </div>
+        <form id="chat-form" class="user-input-form">
+          <div class="input-container">
+            <textarea
+              id="user-input"
+              placeholder="Ask your question"
+              rows="4"
+            ></textarea>
+            <button type="submit" id="send-btn">
+              <i class="fas fa-paper-plane"></i>
+            </button>
+          </div>
+        </form>
+        <button id="pathway-btn" class="hidden">Create Pathway</button>
+      </div>
+    </main>
+    <script src="/static/script.js"></script>
+  </body>
+</html>

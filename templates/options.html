@@ -1,0 +1,6 @@
+<!-- templates/options.html -->
+<ul class="options-list">
+    {% for option in options %}
+        <li><button class="option-button" onclick="sendOption('{{ option }}')">{{ option }}</button></li>
+    {% endfor %}
+</ul>
