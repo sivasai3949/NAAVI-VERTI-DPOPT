@@ -1,18 +1,32 @@
 /* Base Styles */
+:root {
+  --primary-color: #2196f3;
+  --secondary-color: #0277bd;
+  --background-light: #f9f9f9;
+  --background-dark: #121212;
+  --text-light: #f5f5f5;
+  --text-dark: #333;
+  --button-hover: #0d47a1;
+  --border-color: #2196f3;
+  --border-dark: #1976d2;
+}
+
 body {
   font-family: "Poppins", sans-serif;
   margin: 0;
   padding: 0;
-  background-color: #f9f9f9;
+  background-color: var(--background-light);
+  color: var(--text-dark);
   overflow-x: hidden;
   transition: background-color 0.3s, color 0.3s;
 }
 
+/* Header Styles */
 header {
   background-color: #e3f2fd;
-  color: #0277bd;
+  color: var(--secondary-color);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  padding: 10px 0;
+  padding: 1rem 0;
   transition: background-color 0.3s, color 0.3s;
 }
 
@@ -20,15 +34,17 @@ header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 20px;
+  padding: 0 1rem;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
 .logo-container {
-  margin-right: 20px;
+  margin-right: 1rem;
 }
 
 .logo-icon {
-  height: 50px;
+  height: 3rem;
 }
 
 .tagline-container {
@@ -49,21 +65,18 @@ header {
 }
 
 @keyframes blink {
-  0% {
+  0%, 100% {
     opacity: 1;
   }
   50% {
     opacity: 0;
-  }
-  100% {
-    opacity: 1;
   }
 }
 
 .theme-toggle-container {
   display: flex;
   align-items: center;
-  color: #0277bd;
+  color: var(--secondary-color);
 }
 
 .theme-toggle {
@@ -78,7 +91,7 @@ header {
   border-radius: 50px;
   position: relative;
   cursor: pointer;
-  margin: 0 10px;
+  margin: 0 0.5rem;
 }
 
 .theme-toggle-slider {
@@ -93,7 +106,7 @@ header {
 }
 
 .theme-toggle:checked + .theme-toggle-label {
-  background-color: #2196f3;
+  background-color: var(--primary-color);
 }
 
 .theme-toggle:checked + .theme-toggle-label .theme-toggle-slider {
@@ -102,7 +115,7 @@ header {
 
 .theme-toggle-text {
   font-size: 1rem;
-  margin: 0 10px;
+  margin: 0 0.5rem;
   transition: color 0.3s;
 }
 
@@ -119,23 +132,25 @@ body.dark-mode .theme-toggle-text#theme-toggle-text-dark {
 }
 
 body.dark-mode .theme-toggle-label {
-  background-color: #2196f3;
+  background-color: var(--primary-color);
 }
 
 body.dark-mode .theme-toggle-slider {
   background-color: #fff;
 }
 
+/* Main Styles */
 main {
   padding: 2rem;
   margin: auto;
   text-align: center;
+  max-width: 1200px;
 }
 
 main h2 {
   font-size: 1.5rem;
   margin-bottom: 2rem;
-  color: #0277bd;
+  color: var(--secondary-color);
   font-style: italic;
 }
 
@@ -152,30 +167,31 @@ main h2 {
 .intro-bubble {
   background-color: #e1f5fe;
   text-align: left;
-  padding: 15px 20px;
-  border-radius: 15px;
+  padding: 1rem;
+  border-radius: 1rem;
   width: 100%;
   font-weight: 900;
   max-width: 600px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  color: #333; /* Darker text for better contrast */
+  color: var(--text-dark);
 }
 
+/* Chat Styles */
 .chat-container {
   margin: 0 auto;
   max-width: 800px;
-  padding: 20px;
+  padding: 1rem;
   background-color: #fff;
-  border-radius: 10px;
+  border-radius: 1rem;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   overflow-y: auto;
-  height: 400px;
+  height: 50vh;
 }
 
 .chat-bubble {
-  padding: 10px 20px;
-  margin: 10px 0;
-  border-radius: 20px;
+  padding: 1rem;
+  margin: 0.5rem 0;
+  border-radius: 1rem;
   max-width: 80%;
   box-sizing: border-box;
   display: block;
@@ -185,18 +201,15 @@ main h2 {
   background-color: #f5f5f5;
   text-align: left;
   font-weight: bold;
-  color: #333; /* Darker text for better contrast */
+  color: var(--text-dark);
 }
 
 .user-bubble {
-  background-color: #2196f3;
+  background-color: var(--primary-color);
   color: #fff;
   text-align: left;
   margin-left: auto;
-  border-radius: 20px;
   position: relative;
-  padding: 10px 20px;
-  box-sizing: border-box;
   font-weight: 900;
 }
 
@@ -205,9 +218,6 @@ main h2 {
   width: 0;
   height: 0;
   border: 10px solid transparent;
-  border-left: 10px solid transparent;
-  border-top: 10px solid transparent;
-  border-bottom: 10px solid transparent;
   position: absolute;
   top: 10px;
   right: -10px;
@@ -229,13 +239,13 @@ main h2 {
 textarea {
   width: calc(100% - 50px);
   height: 100px;
-  padding: 10px;
-  border: 2px solid #2196f3;
-  border-radius: 10px;
+  padding: 1rem;
+  border: 2px solid var(--primary-color);
+  border-radius: 1rem;
   margin-right: 50px;
   transition: border-color 0.3s;
   box-sizing: border-box;
-  color: #333; /* Darker text for better contrast */
+  color: var(--text-dark);
 }
 
 textarea::placeholder {
@@ -251,10 +261,10 @@ textarea:focus {
   right: 10px;
   top: 50%;
   transform: translateY(-50%);
-  background-color: #2196f3;
+  background-color: var(--primary-color);
   color: #fff;
   border: none;
-  padding: 10px;
+  padding: 0.5rem;
   border-radius: 50%;
   cursor: pointer;
   transition: background-color 0.3s;
@@ -265,70 +275,136 @@ textarea:focus {
 }
 
 #send-btn:hover {
-  background-color: #0d47a1;
+  background-color: var(--button-hover);
 }
 
 #pathway-btn {
-  background-color: #2196f3;
+  background-color: var(--primary-color);
   color: #fff;
   border: none;
-  padding: 10px 20px;
-  border-radius: 10px;
+  padding: 0.5rem 1rem;
+  border-radius: 1rem;
   cursor: pointer;
   transition: background-color 0.3s;
-  margin-top: 20px;
-  display: block;
-  margin: 20px auto;
-  font-size: medium;
-}
-
-.hidden {
-  display: none;
+  margin-top: 1rem;
+  font-size: 1rem;
 }
 
 /* Dark Theme Styles */
 body.dark-mode {
-  background-color: #121212;
-  color: #f5f5f5; /* Lighter text for better readability */
+  background-color: var(--background-dark);
+  color: var(--text-light);
 }
 
 header.dark-mode {
   background-color: #1e1e1e;
-  color: #f5f5f5; /* Lighter text for better readability */
+  color: var(--text-light);
 }
 
 .intro-bubble.dark-mode {
   background-color: #333;
-  color: #f5f5f5; /* Lighter text for better readability */
+  color: var(--text-light);
 }
 
 .chat-container.dark-mode {
   background-color: #1e1e1e;
-  color: #f5f5f5; /* Lighter text for better readability */
+  color: var(--text-light);
 }
 
 .robot-bubble.dark-mode {
   background-color: #2e2e2e;
-  color: #f5f5f5; /* Lighter text for better readability */
+  color: var(--text-light);
 }
 
 .user-bubble.dark-mode {
-  background-color: #1976d2;
-  color: #f5f5f5; /* Lighter text for better readability */
+  background-color: var(--border-dark);
+  color: var(--text-light);
 }
 
 textarea.dark-mode {
-  border-color: #1976d2;
+  border-color: var(--border-dark);
   background-color: #333;
-  color: #f5f5f5; /* Lighter text for better readability */
+  color: var(--text-light);
 }
 
 #send-btn.dark-mode {
-  background-color: #1976d2;
-  color: #f5f5f5; /* Lighter text for better readability */
+  background-color: var(--border-dark);
+  color: var(--text-light);
 }
 
 #pathway-btn.dark-mode {
-  background-color: #1976d2;
-  color: #f5f5f5; /* Lighter text for better readability */
+  background-color: var(--border-dark);
+  color: var(--text-light);
+}
+
+/* Media Queries */
+@media (max-width: 768px) {
+  .header-container {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .tagline-container {
+    margin-top: 0.5rem;
+  }
+
+  .intro-bubble {
+    padding: 1rem;
+  }
+
+  .chat-container {
+    height: 40vh;
+  }
+
+  textarea {
+    width: calc(100% - 40px);
+    margin-right: 40px;
+  }
+}
+
+@media (max-width: 480px) {
+  .header-container {
+    padding: 0 1rem;
+  }
+
+  .tagline-container p {
+    font-size: 1rem;
+  }
+
+  .chat-container {
+    padding: 1rem;
+  }
+
+  textarea {
+    height: 80px;
+    padding: 0.5rem;
+  }
+
+  #send-btn {
+    font-size: 1rem;
+  }
+
+  #pathway-btn {
+    font-size: 0.9rem;
+    padding: 0.5rem 1rem;
+  }
+}
+.for_name {
+  font-size: calc(1.5rem + 0.5vw); /* Base font size scales with screen size */
+  margin-bottom: 2rem;
+  color: var(--secondary-color);
+  font-style: italic;
+  text-align: center; /* Center the text for better readability on all screens */
+}
+
+@media (max-width: 768px) {
+  .for_name {
+    font-size: calc(1.2rem + 1vw); /* Slightly smaller font on smaller screens */
+  }
+}
+
+@media (max-width: 480px) {
+  .for_name {
+    font-size: calc(1rem + 1vw); /* Further decrease font size for mobile devices */
+  }
 }

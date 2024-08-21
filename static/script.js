@@ -23,8 +23,7 @@ document.getElementById('theme-toggle').addEventListener('change', function() {
 function sendUserInput() {
     var userInput = document.getElementById('user-input').value;
     if (!userInput.trim()) return;
-
-    showLoading(); // Show loading indicator
+    showLoading();
 
     fetch('/process_chat', {
         method: 'POST',
@@ -35,14 +34,14 @@ function sendUserInput() {
     })
     .then(response => response.json())
     .then(data => {
-        hideLoading(); // Hide loading indicator
+        hideLoading();
         if (data.error) {
             appendChat("robot", "Error: " + data.error);
         } else {
             appendChat("user", userInput);
             if (data.response) {
                 appendChat("robot", data.response);
-                triggerConfetti(); // Trigger confetti when response is received
+                triggerConfetti();
             }
             if (data.question) {
                 appendChat("robot", data.question);
@@ -55,7 +54,7 @@ function sendUserInput() {
         }
     })
     .catch(error => {
-        hideLoading(); // Hide loading indicator
+        hideLoading();
         console.error('Error:', error);
     });
 }
@@ -70,7 +69,6 @@ function appendChat(role, message) {
     chatBubble.classList.add('chat-bubble');
     chatBubble.classList.add(role + '-bubble');
     chatBubble.innerText = message;
-
     chatContainer.appendChild(chatBubble);
     document.getElementById('user-input').value = ''; // Clear input field after sending
     chatContainer.scrollTop = chatContainer.scrollHeight; // Scroll to bottom of chat
@@ -96,27 +94,12 @@ function hideLoading() {
 function triggerConfetti() {
     var end = Date.now() + (2 * 1000); // Confetti duration: 2 seconds
     var colors = ['#bb0000', '#ffffff'];
-
     function frame() {
-        confetti({
-            particleCount: 2,
-            angle: 60,
-            spread: 55,
-            origin: { x: 0 },
-            colors: colors
-        });
-        confetti({
-            particleCount: 2,
-            angle: 120,
-            spread: 55,
-            origin: { x: 1 },
-            colors: colors
-        });
-
+        confetti({ particleCount: 2, angle: 60, spread: 55, origin: { x: 0 }, colors: colors });
+        confetti({ particleCount: 2, angle: 120, spread: 55, origin: { x: 1 }, colors: colors });
         if (Date.now() < end) {
             requestAnimationFrame(frame);
         }
     }
-
     frame();
 }

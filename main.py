@@ -39,76 +39,40 @@ questions = [
 
 @app.get("/", response_class=HTMLResponse)
 async def home(request: Request):
-    # Reset session variables
     request.session.clear()
     request.session['question_index'] = 0
     request.session['user_responses'] = []
-
-    # Render template with introductory message
     return templates.TemplateResponse("chat.html", {"request": request, "intro_message": "Hi I am Naavi, your personal coach and navigator for higher education...😊"})
 
 @app.post("/process_chat")
 async def process_chat(request: Request, user_input: str = Form(...)):
     question_index = request.session.get('question_index', 0)
     user_responses = request.session.get('user_responses', [])
-
-    # Ensure to store user input if not the first question
+    
     if question_index > 0:
         user_responses.append(user_input)
         request.session['user_responses'] = user_responses
-
+    
     if question_index < len(questions):
         next_question = questions[question_index]
         request.session['question_index'] = question_index + 1
         return JSONResponse({'question': next_question})
     else:
-        request.session['question_index'] = len(questions)  # Ensure index is at the end
+        request.session['question_index'] = len(questions)
         return JSONResponse({'response': "Thank you for providing the information. Please click the 'Create a Pathway' button to proceed.", 'show_pathway_button': True})
 
 @app.get("/generate_pathway", response_class=HTMLResponse)
 async def generate_pathway(request: Request):
     user_responses = request.session.get('user_responses', [])
     raw_response = await get_ai_response(user_responses)
-    
-    # Process the raw response to format it as desired
     pathways = format_response(raw_response)
-    
     return templates.TemplateResponse("pathway.html", {"request": request, "pathway_response": pathways})
 
 async def get_ai_response(user_responses):
     messages = "\n".join([f"user\n{response}\n" for response in user_responses])
-    final_prompt = """
-Based on the information provided, generate three distinct pathways for achieving the user's educational and career goals. Each pathway should be clearly separated and include step-by-step guidance. The output should be structured as follows:
-
-Pathway 1: [Title]
-  Step 1
-  Step 2
-  Step 3
-  Step 4
-  Step 5
- 
- ...
-
-Pathway 2: [Title]
-  Step 1
-  Step 2
-  Step 3
-  Step 4
-  Step 5
- 
- ...
-
-Pathway 3: [Title]
-  Step 1
-  Step 2
-  Step 3
-  Step 4
-  Step 5
- ...
-"""
-
+    final_prompt = """ Based on the information provided, generate three distinct pathways for achieving the user's educational and career goals. Each pathway should be clearly separated and include step-by-step guidance. The output should be structured as follows: Pathway 1: [Title] Step 1 Step 2 Step 3 Step 4 Step 5 ... Pathway 2: [Title] Step 1 Step 2 Step 3 Step 4 Step 5 ... Pathway 3: [Title] Step 1 Step 2 Step 3 Step 4 Step 5 ... """
     messages += f"assistant\n{final_prompt}\n"
-
+    
     try:
         native_request = {
             "prompt": messages,
@@ -125,7 +89,7 @@ def format_response(raw_response):
     lines = raw_response.split('\n')
     formatted_response = []
     current_pathway = {"title": "", "steps": []}
-
+    
     for line in lines:
         if line.startswith("Pathway "):
             if current_pathway["steps"]:
@@ -133,7 +97,7 @@ def format_response(raw_response):
             current_pathway = {"title": line, "steps": []}
         elif line.strip():
             current_pathway["steps"].append(line.strip())
-
+    
     if current_pathway["steps"]:
         formatted_response.append(current_pathway)
     
