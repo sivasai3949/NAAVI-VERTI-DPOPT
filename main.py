@@ -42,30 +42,45 @@ async def home(request: Request):
     request.session.clear()
     request.session['question_index'] = 0
     request.session['user_responses'] = []
+    request.session['pathways_generated'] = False
+    request.session['follow_up_count'] = 0
     return templates.TemplateResponse("chat.html", {"request": request, "intro_message": "Hi I am Naavi, your personal coach and navigator for higher education...😊"})
 
 @app.post("/process_chat")
 async def process_chat(request: Request, user_input: str = Form(...)):
     question_index = request.session.get('question_index', 0)
     user_responses = request.session.get('user_responses', [])
+    pathways_generated = request.session.get('pathways_generated', False)
+    follow_up_count = request.session.get('follow_up_count', 0)
     
     if question_index > 0:
         user_responses.append(user_input)
         request.session['user_responses'] = user_responses
     
-    if question_index < len(questions):
-        next_question = questions[question_index]
-        request.session['question_index'] = question_index + 1
-        return JSONResponse({'question': next_question})
+    if not pathways_generated:
+        if question_index < len(questions):
+            next_question = questions[question_index]
+            request.session['question_index'] = question_index + 1
+            return JSONResponse({'question': next_question})
+        else:
+            request.session['question_index'] = len(questions)
+            request.session['pathways_generated'] = True
+            return JSONResponse({'response': "Thank you for providing the information. Please click the 'Create a Pathway' button to proceed.", 'show_pathway_button': True})
     else:
-        request.session['question_index'] = len(questions)
-        return JSONResponse({'response': "Thank you for providing the information. Please click the 'Create a Pathway' button to proceed.", 'show_pathway_button': True})
+        if follow_up_count < 2:
+            # Generate a response to the follow-up question
+            response = await get_ai_response(user_responses + [user_input])
+            request.session['follow_up_count'] = follow_up_count + 1
+            return JSONResponse({'response': response})
+        else:
+            return JSONResponse({'response': "You have reached the limit of follow-up questions related to the pathways."})
 
 @app.get("/generate_pathway", response_class=HTMLResponse)
 async def generate_pathway(request: Request):
     user_responses = request.session.get('user_responses', [])
     raw_response = await get_ai_response(user_responses)
     pathways = format_response(raw_response)
+    request.session['pathways_generated'] = True  # Set pathways generated
     return templates.TemplateResponse("pathway.html", {"request": request, "pathway_response": pathways})
 
 async def get_ai_response(user_responses):
