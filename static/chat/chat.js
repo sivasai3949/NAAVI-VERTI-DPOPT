@@ -1,3 +1,5 @@
+let messageCount = 0; // Initialize a counter for user messages
+
 document.getElementById("send-btn").addEventListener("click", function (event) {
   event.preventDefault();
   sendUserInput();
@@ -43,6 +45,8 @@ function sendUserInput() {
         appendChat("robot", `Error: ${data.error}`);
       } else {
         appendChat("user", userInput);
+        messageCount++; // Increment the message count for each valid user input
+
         if (data.response) {
           appendChat("robot", data.response);
           triggerConfetti();
@@ -50,8 +54,12 @@ function sendUserInput() {
         if (data.question) {
           appendChat("robot", data.question);
         }
-        const pathwayBtn = document.getElementById("pathway-btn");
-        pathwayBtn.classList.toggle("hidden", !data.show_pathway_button);
+
+        // Enable the pathway button if message count reaches 5
+        if (messageCount === 5) {
+          const pathwayBtn = document.getElementById("pathway-btn");
+          pathwayBtn.disabled = false; // Enable the button
+        }
       }
     })
     .catch((error) => {
