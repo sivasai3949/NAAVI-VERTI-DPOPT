@@ -176,7 +176,7 @@ main h2 {
   color: var(--text-dark);
 }
 
-/* Chat Styles */
+/* Chat Styles
 .chat-container {
   margin: 0 auto;
   max-width: 800px;
@@ -186,6 +186,83 @@ main h2 {
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   overflow-y: auto;
   height: 50vh;
+} */
+
+/* General container styling */
+.chat-container-wrapper {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px; /* Adjusts spacing between the two containers */
+  height: auto; /* Ensures the wrapper adjusts based on content */
+  margin-top: 20px;
+  width: 100%; /* Ensures full width of the screen */
+}
+
+/* Chat containers */
+.chat-container-left,
+.chat-container-right {
+  flex: 1; /* Ensures both containers take equal space */
+  max-width: 60%; /* Increase the width of each container to 60% */
+  min-height: 400px; /* Ensures the containers have a minimum height */
+  border: 1px solid #ccc; /* Optional border for separation */
+  padding: 20px; /* Adds internal spacing */
+  overflow-y: auto; /* Enables scrolling if content overflows */
+  background-color: #f9f9f9; /* Light background color */
+  border-radius: 8px; /* Smooth corner edges */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Subtle shadow effect */
+}
+
+/* User input form styling */
+.user-input-form {
+  display: flex;
+  margin-top: 20px;
+}
+
+/* Input container */
+.input-container {
+  display: flex;
+  flex: 1;
+  gap: 10px;
+}
+
+textarea {
+  flex: 1;
+  resize: none;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+/* Button styling */
+button {
+  padding: 10px 20px;
+  border-radius: 8px;
+  border: none;
+  background-color: #29449d;
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+button:hover {
+  background-color: #1e346f;
+}
+
+
+/* Adjust for smaller screens */
+@media (max-width: 768px) {
+  .chat-container-wrapper {
+    flex-direction: column; /* Stacks containers vertically on small screens */
+  }
+
+  .chat-container-left,
+  .chat-container-right {
+    max-width: 100%; /* Ensures containers use full width when stacked */
+    height: auto; /* Adjust height for better responsiveness */
+  }
 }
 
 .chat-bubble {
