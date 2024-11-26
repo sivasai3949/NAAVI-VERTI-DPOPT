@@ -22,19 +22,12 @@
         .smooth-scroll {
             scroll-behavior: smooth;
         }
-        #pathway-btn {
-            margin-top: 20px;
-            display: block;
-            width: 100%;
-            padding: 10px;
-            text-align: center;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            cursor: pointer;
-        }
-        #pathway-btn.hidden {
+        .pathway-details {
             display: none;
+            margin-top: 15px;
+        }
+        .show-details {
+            display: block;
         }
     </style>
 </head>
@@ -61,19 +54,32 @@
                             <li>{{ step }}</li>
                             {% endfor %}
                         </ol>
+                        {% if pathway.description %}
+                        <button class="btn btn-info mt-3" onclick="toggleDetails('details{{ loop.index }}')">Show Details</button>
+                        <div id="details{{ loop.index }}" class="pathway-details">
+                            <p><strong>Description:</strong> {{ pathway.description }}</p>
+                        </div>
+                        {% endif %}
                     </div>
                 </div>
             </div>
             {% endfor %}
         </div>
 
-        <!-- Pathway Button (Optional) -->
-        <button id="pathway-btn" class="hidden" onclick="window.location.href='/generate_pathway'">Generate New Pathway</button>
-
         <!-- Include Bootstrap JS and dependencies -->
         <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.2/dist/umd/popper.min.js"></script>
         <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+        <script>
+            function toggleDetails(id) {
+                var detailsDiv = document.getElementById(id);
+                if (detailsDiv.classList.contains('show-details')) {
+                    detailsDiv.classList.remove('show-details');
+                } else {
+                    detailsDiv.classList.add('show-details');
+                }
+            }
+        </script>
     </div>
 </body>
 </html>

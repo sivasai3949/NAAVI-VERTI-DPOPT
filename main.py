@@ -15,10 +15,18 @@ app = FastAPI()
 load_dotenv()
 SECRET_KEY = os.getenv("SECRET_KEY")
 AWS_REGION = os.getenv("AWS_REGION", "ap-south-1")
-MODEL_ID = "meta.llama3-70b-instruct-v1:0"
+MODEL_ID = os.getenv("MODEL_ID", "meta.llama3-70b-instruct-v1:0")
+
+if not SECRET_KEY:
+    raise RuntimeError("SECRET_KEY is missing. Ensure it is set in the .env file.")
+if not AWS_REGION:
+    raise RuntimeError("AWS_REGION is missing. Ensure it is set in the .env file.")
 
 # Initialize AWS Bedrock client
-bedrock_client = boto3.client("bedrock-runtime", region_name=AWS_REGION)
+try:
+    bedrock_client = boto3.client("bedrock-runtime", region_name=AWS_REGION)
+except Exception as e:
+    raise RuntimeError(f"Failed to initialize AWS Bedrock client: {e}")
 
 # Mount static files
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -58,7 +66,7 @@ async def process_chat(request: Request, user_input: str = Form(...)):
     if current_phase == "left":
         question_index = request.session.get('left_question_index', 0)
         if question_index > 0:
-            user_responses.append(user_input)
+            user_responses.append({"container": "left", "question": left_questions[question_index - 1], "response": user_input})
         if question_index < len(left_questions):
             next_question = left_questions[question_index]
             request.session['left_question_index'] = question_index + 1
@@ -73,7 +81,7 @@ async def process_chat(request: Request, user_input: str = Form(...)):
     elif current_phase == "right":
         question_index = request.session.get('right_question_index', 0)
         if question_index > 0:
-            user_responses.append(user_input)
+            user_responses.append({"container": "right", "question": right_questions[question_index - 1], "response": user_input})
         if question_index < len(right_questions):
             next_question = right_questions[question_index]
             request.session['right_question_index'] = question_index + 1
@@ -85,13 +93,37 @@ async def process_chat(request: Request, user_input: str = Form(...)):
 @app.get("/generate_pathway", response_class=HTMLResponse)
 async def generate_pathway(request: Request):
     user_responses = request.session.get('user_responses', [])
-    raw_response = await get_ai_response(user_responses)
-    pathways = format_response(raw_response)
-    return templates.TemplateResponse("pathway.html", {"request": request, "pathway_response": pathways})
+    if not user_responses:
+        return templates.TemplateResponse("pathway.html", {"request": request, "pathway_response": "No user responses provided."})
+    
+    try:
+        raw_response = await get_ai_response(user_responses)
+        pathways = format_response(raw_response)
+        return templates.TemplateResponse("pathway.html", {"request": request, "pathway_response": pathways})
+    except Exception as e:
+        return templates.TemplateResponse("pathway.html", {"request": request, "pathway_response": f"Error generating pathways: {e}"})
 
 async def get_ai_response(user_responses):
-    messages = "\n".join([f"user\n{response}\n" for response in user_responses])
-    final_prompt = """ Based on the information provided, generate three distinct pathways for achieving the user's educational and career goals. Each pathway should be clearly separated and include step-by-step guidance. The output should be structured as follows: Pathway 1: [Title] Step 1 Step 2 Step 3 Step 4 Step 5 ... Pathway 2: [Title] Step 1 Step 2 Step 3 Step 4 Step 5 ... Pathway 3: [Title] Step 1 Step 2 Step 3 Step 4 Step 5 ... """
+    messages = "\n".join([f"user\n{response['response']}\n" for response in user_responses])
+    final_prompt = """ Based on the information provided, generate three distinct pathways for achieving the user's educational and career goals. Each pathway should be clearly separated and include step-by-step guidance. The output should be structured as follows: 
+    Pathway 1: [Title] 
+    Step 1 
+    Step 2 
+    Step 3 
+    Step 4 
+    Step 5 
+    Pathway 2: [Title] 
+    Step 1 
+    Step 2 
+    Step 3 
+    Step 4 
+    Step 5 
+    Pathway 3: [Title] 
+    Step 1 
+    Step 2 
+    Step 3 
+    Step 4 
+    Step 5 """
     messages += f"assistant\n{final_prompt}\n"
     
     try:
@@ -107,6 +139,9 @@ async def get_ai_response(user_responses):
         raise HTTPException(status_code=500, detail=f"Error generating AI response: {e}")
 
 def format_response(raw_response):
+    if not raw_response:
+        return "No response from the AI model."
+    
     lines = raw_response.split('\n')
     formatted_response = []
     current_pathway = {"title": "", "steps": []}
