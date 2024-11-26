@@ -22,6 +22,20 @@
         .smooth-scroll {
             scroll-behavior: smooth;
         }
+        #pathway-btn {
+            margin-top: 20px;
+            display: block;
+            width: 100%;
+            padding: 10px;
+            text-align: center;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        #pathway-btn.hidden {
+            display: none;
+        }
     </style>
 </head>
 <body class="smooth-scroll">
@@ -52,6 +66,9 @@
             </div>
             {% endfor %}
         </div>
+
+        <!-- Pathway Button (Optional) -->
+        <button id="pathway-btn" class="hidden" onclick="window.location.href='/generate_pathway'">Generate New Pathway</button>
 
         <!-- Include Bootstrap JS and dependencies -->
         <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>

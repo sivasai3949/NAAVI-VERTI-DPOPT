@@ -1,105 +1,66 @@
-document.getElementById('send-btn').addEventListener('click', function(event) {
-    event.preventDefault();
-    sendUserInput();
-});
+const form = document.getElementById("chat-form");
+const userInput = document.getElementById("user-input");
+const leftContainer = document.querySelector(".chat-container-left");
+const rightContainer = document.querySelector(".chat-container-right");
+const pathwayBtn = document.getElementById("pathway-btn");
 
-document.getElementById('user-input').addEventListener('keypress', function(event) {
-    if (event.keyCode === 13 && !event.shiftKey) {
-        event.preventDefault();
-        sendUserInput();
+// Handle form submission
+form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const userText = userInput.value.trim();
+    if (!userText) return;
+
+    // Add user input to the correct container
+    const userBubble = document.createElement("div");
+    userBubble.classList.add("chat-bubble", "user-bubble");
+    userBubble.textContent = userText;
+
+    let currentPhase = document.querySelector(".active-container");
+    if (!currentPhase) {
+        // If no active container is found, default to the left container
+        currentPhase = leftContainer; 
     }
-});
+    currentPhase.appendChild(userBubble);
 
-document.getElementById('pathway-btn').addEventListener('click', function(event) {
-    event.preventDefault();
-    createPathway();
-});
+    userInput.value = "";
 
-// Theme toggle functionality
-document.getElementById('theme-toggle').addEventListener('change', function() {
-    document.body.classList.toggle('dark-mode');
-});
-
-function sendUserInput() {
-    var userInput = document.getElementById('user-input').value;
-    if (!userInput.trim()) return;
-    showLoading();
-
-    fetch('/process_chat', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: 'user_input=' + encodeURIComponent(userInput)
-    })
-    .then(response => response.json())
-    .then(data => {
-        hideLoading();
-        if (data.error) {
-            appendChat("robot", "Error: " + data.error);
-        } else {
-            appendChat("user", userInput);
-            if (data.response) {
-                appendChat("robot", data.response);
-                triggerConfetti();
-            }
-            if (data.question) {
-                appendChat("robot", data.question);
-            }
-            if (data.show_pathway_button) {
-                document.getElementById('pathway-btn').classList.remove('hidden');
-            } else {
-                document.getElementById('pathway-btn').classList.add('hidden');
-            }
-        }
-    })
-    .catch(error => {
-        hideLoading();
-        console.error('Error:', error);
+    // Send user input to the backend
+    const response = await fetch("/process_chat", {
+        method: "POST",
+        body: new URLSearchParams({ user_input: userText }),
     });
-}
 
-function createPathway() {
-    window.open('/generate_pathway', '_blank');
-}
+    const data = await response.json();
 
-function appendChat(role, message) {
-    var chatContainer = document.getElementById('chat-container');
-    var chatBubble = document.createElement('div');
-    chatBubble.classList.add('chat-bubble');
-    chatBubble.classList.add(role + '-bubble');
-    chatBubble.innerText = message;
-    chatContainer.appendChild(chatBubble);
-    document.getElementById('user-input').value = ''; // Clear input field after sending
-    chatContainer.scrollTop = chatContainer.scrollHeight; // Scroll to bottom of chat
-}
+    if (data.question) {
+        // Add the chatbot's question to the correct container
+        const botBubble = document.createElement("div");
+        botBubble.classList.add("chat-bubble", "bot-bubble");
+        botBubble.textContent = data.question;
 
-function showLoading() {
-    var chatContainer = document.getElementById('chat-container');
-    var loadingIndicator = document.createElement('div');
-    loadingIndicator.id = 'loading-indicator';
-    loadingIndicator.classList.add('chat-bubble', 'robot-bubble');
-    loadingIndicator.innerText = '...'; // Loading dots
-    chatContainer.appendChild(loadingIndicator);
-    chatContainer.scrollTop = chatContainer.scrollHeight; // Scroll to bottom of chat
-}
-
-function hideLoading() {
-    var loadingIndicator = document.getElementById('loading-indicator');
-    if (loadingIndicator) {
-        loadingIndicator.remove();
-    }
-}
-
-function triggerConfetti() {
-    var end = Date.now() + (2 * 1000); // Confetti duration: 2 seconds
-    var colors = ['#bb0000', '#ffffff'];
-    function frame() {
-        confetti({ particleCount: 2, angle: 60, spread: 55, origin: { x: 0 }, colors: colors });
-        confetti({ particleCount: 2, angle: 120, spread: 55, origin: { x: 1 }, colors: colors });
-        if (Date.now() < end) {
-            requestAnimationFrame(frame);
+        if (data.container === "left") {
+            leftContainer.appendChild(botBubble);
+        } else if (data.container === "right") {
+            rightContainer.appendChild(botBubble);
         }
+
+        // Switch active container if needed
+        if (data.container === "right") {
+            document.querySelector(".active-container").classList.remove("active-container");
+            rightContainer.classList.add("active-container");
+        }
+    } else if (data.response) {
+        // Show the final message and pathway button
+        const finalMessage = document.createElement("div");
+        finalMessage.classList.add("chat-bubble", "bot-bubble");
+        finalMessage.textContent = data.response;
+
+        rightContainer.appendChild(finalMessage);
+        pathwayBtn.classList.remove("hidden");
     }
-    frame();
-}
+});
+
+// Redirect to generate pathways
+pathwayBtn.addEventListener("click", () => {
+    window.location.href = "/generate_pathway";
+});

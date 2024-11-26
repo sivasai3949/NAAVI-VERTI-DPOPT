@@ -29,37 +29,58 @@ templates = Jinja2Templates(directory="templates")
 # Enable session handling
 app.add_middleware(SessionMiddleware, secret_key=SECRET_KEY)
 
-# Initial questions
-questions = [
-    "Can you briefly describe your current academic journey, including any notable achievements?",
-    "Are there specific fields of study or professions you are passionate about? Where do you see yourself in five years, academically or professionally?",
-    "What extracurricular activities or hobbies do you enjoy that align with your academic interests?",
-    "What educational resources or materials do you regularly use?"
+# Left and Right questions
+left_questions = [
+    "Could you provide a comprehensive overview of your education, highlighting what inspires your choices?",
+    "Which specific disciplines or career dreams ignite your passion along with the skills or competencies you aim for in the future?",
+    "How do you stay informed about emerging trends and advancements in the fields of your interest?"
+]
+
+right_questions = [
+    "Describe your key personality traits that best describe and influence your learning style and decision-making process?",
+    "What is your perspective or understanding of a viewpoint? Specify any experience or an impactful moment that broadened your understanding."
 ]
 
 @app.get("/", response_class=HTMLResponse)
 async def home(request: Request):
     request.session.clear()
-    request.session['question_index'] = 0
+    request.session['left_question_index'] = 0
+    request.session['right_question_index'] = 0
     request.session['user_responses'] = []
+    request.session['current_phase'] = "left"  # Start with left questions
     return templates.TemplateResponse("chat.html", {"request": request, "intro_message": "Hi I am Naavi, your personal coach and navigator for higher education...😊"})
 
 @app.post("/process_chat")
 async def process_chat(request: Request, user_input: str = Form(...)):
-    question_index = request.session.get('question_index', 0)
     user_responses = request.session.get('user_responses', [])
-    
-    if question_index > 0:
-        user_responses.append(user_input)
-        request.session['user_responses'] = user_responses
-    
-    if question_index < len(questions):
-        next_question = questions[question_index]
-        request.session['question_index'] = question_index + 1
-        return JSONResponse({'question': next_question})
-    else:
-        request.session['question_index'] = len(questions)
-        return JSONResponse({'response': "Thank you for providing the information. Please click the 'Create a Pathway' button to proceed.", 'show_pathway_button': True})
+    current_phase = request.session.get('current_phase', "left")
+
+    if current_phase == "left":
+        question_index = request.session.get('left_question_index', 0)
+        if question_index > 0:
+            user_responses.append(user_input)
+        if question_index < len(left_questions):
+            next_question = left_questions[question_index]
+            request.session['left_question_index'] = question_index + 1
+            return JSONResponse({'question': next_question, 'container': 'left'})
+        else:
+            request.session['current_phase'] = "right"  # Switch to right questions
+            question_index = request.session.get('right_question_index', 0)
+            next_question = right_questions[question_index]
+            request.session['right_question_index'] = question_index + 1
+            return JSONResponse({'question': next_question, 'container': 'right'})
+
+    elif current_phase == "right":
+        question_index = request.session.get('right_question_index', 0)
+        if question_index > 0:
+            user_responses.append(user_input)
+        if question_index < len(right_questions):
+            next_question = right_questions[question_index]
+            request.session['right_question_index'] = question_index + 1
+            return JSONResponse({'question': next_question, 'container': 'right'})
+        else:
+            request.session['user_responses'] = user_responses
+            return JSONResponse({'response': "Thank you for providing the information. Please click the 'Create a Pathway' button to proceed.", 'show_pathway_button': True})
 
 @app.get("/generate_pathway", response_class=HTMLResponse)
 async def generate_pathway(request: Request):
