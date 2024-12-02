@@ -1,7 +1,11 @@
 {
   "version": 2,
   "builds": [
-    { "src": "main.py", "use": "@vercel/python" },
+    { 
+      "src": "main.py", 
+      "use": "@vercel/python",
+      "config": { "runtime": "python3.10" }
+    },
     { "src": "static/*", "use": "@vercel/static" },
     { "src": "templates/*", "use": "@vercel/static" }
   ],
