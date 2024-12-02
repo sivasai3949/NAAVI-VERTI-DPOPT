@@ -1,16 +1,11 @@
 {
   "version": 2,
   "builds": [
-    { 
-      "src": "main.py", 
-      "use": "@vercel/python",
-      "config": { "runtime": "python3.10" } 
-    },
+    { "src": "main.py", "use": "@vercel/python" },
     { "src": "static/*", "use": "@vercel/static" },
     { "src": "templates/*", "use": "@vercel/static" }
   ],
   "routes": [
     { "src": "/(.*)", "dest": "main.py" }
-  ],
-  "installCommand": "pip install setuptools==67.6.1"
+  ]
 }
