@@ -8,3 +8,5 @@ requests==2.32.3
 numpy==1.23.5
 setuptools>=58.1.0
 wheel
+itsdangerous==2.2.0
+python-multipart==0.0.19
