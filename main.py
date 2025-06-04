@@ -15,7 +15,9 @@ app = FastAPI()
 load_dotenv()
 SECRET_KEY = os.getenv("SECRET_KEY")
 AWS_REGION = os.getenv("AWS_REGION", "ap-south-1")
-MODEL_ID = os.getenv("MODEL_ID", "meta.llama3-70b-instruct-v1:0")
+
+# Use the Mistral Large model instead of LLaMA
+MODEL_ID = os.getenv("MODEL_ID", "mistral.mistral-large-2402-v1:0")
 
 # New: load AWS access/secret key
 AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
@@ -50,15 +52,16 @@ app.add_middleware(SessionMiddleware, secret_key=SECRET_KEY)
 
 # Left and Right questions
 left_questions = [
-    "Could you provide a comprehensive overview of your education, highlighting what inspires your choices?",
-    "Which specific disciplines or career dreams ignite your passion along with the skills or competencies you aim for in the future?",
-    "How do you stay informed about emerging trends and advancements in the fields of your interest?"
+    "Which class are you in and where do you study?",
+    "What job or career do you dream of? Why do you like it?",
+    "How do you learn new things about your favorite subject or career?"
 ]
 
 right_questions = [
-    "Describe your key personality traits that best describe and influence your learning style and decision-making process?",
-    "What is your perspective or understanding of a viewpoint? Specify any experience or an impactful moment that broadened your understanding."
+    "When you have to learn something or make a choice, what do you usually do? (Like ask someone, search online, or try it yourself?)",
+    "Can you share one thing that changed how you think or helped you see something in a new way? (Like a story, movie, person, or event)"
 ]
+
 
 @app.get("/", response_class=HTMLResponse)
 async def home(request: Request):
@@ -112,6 +115,7 @@ async def process_chat(request: Request, user_input: str = Form(...)):
             request.session['right_question_index'] = question_index + 1
             return JSONResponse({'question': next_question, 'container': 'right'})
         else:
+            # All questions answered: persist and show “Create Pathway” button
             request.session['user_responses'] = user_responses
             return JSONResponse({
                 'response': "Thank you for providing the information. Please click the 'Create a Pathway' button to proceed.",
@@ -138,49 +142,74 @@ async def generate_pathway(request: Request):
         )
 
 async def get_ai_response(user_responses):
-    messages = "\n".join([f"user\n{response['response']}\n" for response in user_responses])
-    final_prompt = """ Based on the information provided, generate three distinct pathways for achieving the user's educational and career goals. Each pathway should be clearly separated and include step-by-step guidance. The output should be structured as follows: 
-    Pathway 1: [Title] 
-    Step 1 
-    Step 2 
-    Step 3 
-    Step 4 
-    Step 5 
-    Step 6
-    Step 7
-    Step 8
-    Pathway 2: [Title] 
-    Step 1 
-    Step 2 
-    Step 3 
-    Step 4 
-    Step 5 
-    Step 6
-    Step 7
-    Step 8
-    Pathway 3: [Title] 
-    Step 1 
-    Step 2 
-    Step 3 
-    Step 4 
-    Step 5
-    Step 6
-    Step 7
-    Step 8 """
-    messages += f"assistant\n{final_prompt}\n"
-    
+    # Build a simple “User information” block instead of embedding “user\n” tags.
+    user_info_lines = []
+    for r in user_responses:
+        # We know r["question"] is the question text, and r["response"] is what the user replied
+        user_info_lines.append(f"- {r['question']}\n  -> {r['response']}")
+    user_info = "\n".join(user_info_lines)
+
+    # Core instruction that asks for three distinct pathways
+    final_prompt = """
+Based on the following user information, generate three distinct pathways for achieving the user's educational and career goals. Each pathway should be clearly separated and include step-by-step guidance. The output must follow exactly this structure:
+
+Pathway 1: [Title]
+Step 1
+Step 2
+Step 3
+Step 4
+Step 5
+Step 6
+Step 7
+Step 8
+
+Pathway 2: [Title]
+Step 1
+Step 2
+Step 3
+Step 4
+Step 5
+Step 6
+Step 7
+Step 8
+
+Pathway 3: [Title]
+Step 1
+Step 2
+Step 3
+Step 4
+Step 5
+Step 6
+Step 7
+Step 8
+""".strip()
+
+    # Combine “User information” + instruction inside Mistral’s <s>[INST] … [/INST] wrapper
+    # Note: do NOT prefix with "user\n"; simply present the user_info as plain text.
+    mistral_prompt = (
+        "<s>[INST] "
+        "User information:\n"
+        f"{user_info}\n\n"
+        f"{final_prompt} "
+        "[/INST]"
+    )
+
     try:
-        native_request = {
-            "prompt": messages,
-            "max_gen_len": 4096,
-            "temperature": 0.6,
+        request_body = {
+            "prompt": mistral_prompt,
+            "max_tokens": 8192,
+            "temperature": 0.7,
+            "top_p": 0.9
         }
         response = bedrock_client.invoke_model(
-            modelId=MODEL_ID, 
-            body=json.dumps(native_request)
+            modelId=MODEL_ID,
+            contentType="application/json",
+            accept="application/json",
+            body=json.dumps(request_body)
         )
         model_response = json.loads(response["body"].read())
-        return model_response["generation"]
+        # Mistral’s generated text is at outputs[0]["text"]
+        return model_response["outputs"][0]["text"]
     except ClientError as e:
         raise HTTPException(status_code=500, detail=f"Error generating AI response: {e}")
 
@@ -190,17 +219,48 @@ def format_response(raw_response):
     
     lines = raw_response.split('\n')
     formatted_response = []
+    current_pathway = None
+
+    for line in lines:
+        if line.strip().startswith("Pathway "):
+            # If we were already collecting a previous block, append it now
+            if current_pathway is not None:
+                formatted_response.append(current_pathway)
+
+            # Create a new pathway object
+            current_pathway = {
+                "title": line.strip(),
+                "steps": []
+            }
+
+        elif line.strip() and current_pathway is not None:
+            current_pathway["steps"].append(line.strip())
+
+    # Append the final pathway (even if it has zero steps)
+    if current_pathway is not None:
+        formatted_response.append(current_pathway)
+
+    return formatted_response
+
+    if not raw_response:
+        return "No response from the AI model."
+    
+    lines = raw_response.split('\n')
+    formatted_response = []
     current_pathway = {"title": "", "steps": []}
     
     for line in lines:
         if line.startswith("Pathway "):
-            if current_pathway["steps"]:
+            # If we were collecting the previous block, append it (only if it has steps)
+            if current_pathway["title"] and current_pathway["steps"]:
                 formatted_response.append(current_pathway)
-            current_pathway = {"title": line, "steps": []}
+            current_pathway = {"title": line.strip(), "steps": []}
         elif line.strip():
+            # Anything non-blank after a "Pathway X:" line is considered a step
             current_pathway["steps"].append(line.strip())
     
-    if current_pathway["steps"]:
+    # Append the last pathway if it has at least one step
+    if current_pathway["title"] and current_pathway["steps"]:
         formatted_response.append(current_pathway)
     
     return formatted_response
